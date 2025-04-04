@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Prueba de Duelos Mágicos</title>
+  <script src="https://cdn.jsdelivr.net/npm/sockjs-client@1/dist/sockjs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/stompjs@2.3.3/lib/stomp.min.js"></script>
+</head>
+<body>
+  <h1>Duelos Mágicos 🧙‍♂️</h1>
+
+  <label for="jugador">Nombre del jugador:</label>
+  <input type="text" id="jugador" placeholder="Ej. Harry"><br><br>
+
+  <label for="hechizo">Hechizo:</label>
+  <input type="text" id="hechizo" placeholder="Ej. Expelliarmus"><br><br>
+
+  <button onclick="enviarHechizo()">¡Lanzar Hechizo!</button>
+
+  <h2>Resultado:</h2>
+  <div id="resultado"></div>
+
+  <script>
+    let stompClient = null;
+
+    function conectar() {
+      const socket = new SockJS('http://localhost:8080/duelo-magico');
+      stompClient = Stomp.over(socket);
+
+      stompClient.connect({}, function (frame) {
+        console.log('Conectado: ' + frame);
+
+        stompClient.subscribe('/topic/resultado', function (mensaje) {
+          const respuesta = JSON.parse(mensaje.body);
+          document.getElementById('resultado').innerText = respuesta.resultado;
+        });
+      });
+    }
+
+    function enviarHechizo() {
+      const jugador = document.getElementById("jugador").value;
+      const hechizo = document.getElementById("hechizo").value;
+
+      stompClient.send("/app/hechizo", {}, JSON.stringify({ jugador, hechizo }));
+    }
+
+    conectar();
+  </script>
+</body>
+</html>
